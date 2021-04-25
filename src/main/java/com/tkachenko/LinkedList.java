@@ -1,13 +1,16 @@
 package com.tkachenko;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 public class LinkedList implements Queue {
-    private int size;
+    private int size = 0;
     private final Node head = new Node(null);
     private Node tail;
 
     public LinkedList() {
         tail = head;
-        size = 0;
+        head.next = head;
     }
 
     @Override
@@ -22,12 +25,9 @@ public class LinkedList implements Queue {
 
     @Override
     public void enqueue(String element) {
-        Node node = new Node(element);
-
+        Node node = new Node(element, head);
         tail.next = node;
-
         tail = node;
-
         size++;
     }
 
@@ -36,7 +36,7 @@ public class LinkedList implements Queue {
         String result = peek();
 
         if (head == tail) {
-            return null;
+            throw new NoSuchElementException("peek from an empty list");
         }
 
         if (head.next == tail) {
@@ -50,16 +50,76 @@ public class LinkedList implements Queue {
 
     @Override
     public String peek() {
-        return head.next == null ? head.value : head.next.value;
+        if (isEmpty()) {
+            throw new NoSuchElementException("Peek from an empty list");
+        }
+        return head.next.value;
+    }
+
+    @Override
+    public void clear() {
+        for (Node e = head; e != null; ) {
+            Node next = e.next;
+            e.value = null;
+            e.next = null;
+            e = next;
+        }
+        head.next = head;
+        tail = head;
+        size = 0;
+    }
+
+    @Override
+    public Iterator<String> iterator() {
+         return new IteratorImpl();
+    }
+
+    private class IteratorImpl implements Iterator<String> {
+        Node cursor = head;
+        Node prevCursor = null;
+
+        @Override
+        public boolean hasNext() {
+            return cursor.next != null && cursor.next != head;
+        }
+
+        @Override
+        public String next() {
+            if (hasNext()) {
+                String nextValue = cursor.next.value;
+                prevCursor = cursor;
+                cursor = cursor.next;
+                return nextValue;
+            }
+            throw new NoSuchElementException("There is no next element");
+        }
+
+        @Override
+        public void remove() {
+            if (cursor == head) {
+                throw new IllegalStateException("Method next() hasn't been called");
+            }
+            if (prevCursor == cursor) {
+                throw new IllegalStateException("Method remove() has been already called");
+            }
+
+            prevCursor.next = cursor.next;
+            cursor = prevCursor;
+            size--;
+        }
     }
 
     private static class Node {
-        private Node next;
-        private final String value;
+        Node next;
+        String value;
 
-        public Node(String value) {
-            this.next = null;
+        Node(String value) {
             this.value = value;
+        }
+
+        Node(String value, Node next) {
+            this(value);
+            this.next = next;
         }
     }
 }

@@ -1,33 +1,38 @@
 package com.tkachenko;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class LinkedListTest {
+    Queue queue;
 
     @BeforeEach
     void setUp() {
+        queue = new LinkedList();
     }
 
     @AfterEach
     void tearDown() {
+        queue = null;
     }
 
     @Test
     @DisplayName("Test that newly created queue has size = 0")
     void size() {
-        Queue queue = new LinkedList();
         assertEquals(0, queue.size());
     }
 
     @Test
     @DisplayName("Test after enqueue one object queue has size = 1")
     void size1() {
-        Queue queue = new LinkedList();
         queue.enqueue("");
         assertEquals(1, queue.size());
     }
@@ -35,7 +40,6 @@ class LinkedListTest {
     @Test
     @DisplayName("After enqueue/dequeue the queue has size = 0")
     void size2() {
-        Queue queue = new LinkedList();
         queue.enqueue("");
         queue.dequeue();
         assertEquals(0, queue.size());
@@ -44,14 +48,12 @@ class LinkedListTest {
     @Test
     @DisplayName("isEmpty for empty queue")
     void isEmpty() {
-        Queue queue = new LinkedList();
         assertTrue(queue.isEmpty());
     }
 
     @Test
     @DisplayName("isEmpty after enqueue returns false")
     void isEmpty1() {
-        Queue queue = new LinkedList();
         queue.enqueue("");
         assertFalse(queue.isEmpty());
     }
@@ -59,7 +61,6 @@ class LinkedListTest {
     @Test
     @DisplayName("Dequeue returns the object that was enqueued")
     void enqueue() {
-        Queue queue = new LinkedList();
         String element = "#1";
         queue.enqueue(element);
         String result = queue.dequeue();
@@ -69,7 +70,6 @@ class LinkedListTest {
     @Test
     @DisplayName("Dequeue two elements from the queue of two elements")
     void enqueue1() {
-        Queue queue = new LinkedList();
         String element = "#1";
         String element1 = "#2";
         queue.enqueue(element);
@@ -83,7 +83,6 @@ class LinkedListTest {
     @Test
     @DisplayName("After dequeue one element returns value of this element")
     void dequeue() {
-        Queue queue = new LinkedList();
         String element = "#1";
         queue.enqueue(element);
         String result = queue.dequeue();
@@ -94,7 +93,6 @@ class LinkedListTest {
     @Test
     @DisplayName("After dequeue one element from the queue of two elements size == 1")
     void dequeue1() {
-        Queue queue = new LinkedList();
         String element = "#1";
         String element1 = "#2";
         queue.enqueue(element);
@@ -105,18 +103,14 @@ class LinkedListTest {
     }
 
     @Test
-    @DisplayName("After dequeue on empty queue returns null")
+    @DisplayName("After dequeue on empty queue throws NoSuchElementException")
     void dequeue2() {
-        Queue queue = new LinkedList();
-        String result = queue.dequeue();
-        assertTrue(queue.isEmpty());
-        assertNull(result);
+        assertThrows(NoSuchElementException.class, () -> queue.dequeue());
     }
 
     @Test
     @DisplayName("After enqueue one element peek returns this element ")
     void peek() {
-        Queue queue = new LinkedList();
         String element = "#1";
         queue.enqueue(element);
         assertEquals(element, queue.peek());
@@ -125,7 +119,6 @@ class LinkedListTest {
     @Test
     @DisplayName("After enqueue two elements peek returns first element")
     void peek1() {
-        Queue queue = new LinkedList();
         String element = "#1";
         String element1 = "#2";
         queue.enqueue(element);
@@ -134,9 +127,54 @@ class LinkedListTest {
     }
 
     @Test
-    @DisplayName("After peek from empty queue returns null")
+    @DisplayName("After peek from empty queue throws NoSuchElementException")
     void peek2() {
-        Queue queue = new LinkedList();
-        assertNull(queue.peek());
+        assertThrows(NoSuchElementException.class, () -> queue.peek());
+    }
+
+    @Test
+    void clear() {
+        queue.enqueue("#1");
+        queue.clear();
+        assertTrue(queue.isEmpty());
+    }
+
+    @Test
+    void testForeach() {
+        int i = 0;
+        for (var el : queue) {
+            i++;
+        }
+        assertEquals(0, i);
+    }
+
+    @Test
+    void testForeach1() {
+        int i = 0;
+        queue.enqueue("#1");
+        queue.enqueue("#2");
+        for (var el : queue) {
+            i++;
+        }
+        assertEquals(2, i);
+    }
+
+    @Test
+    void iteratorRemove() {
+        queue.enqueue("#1");
+        queue.enqueue("#2");
+        queue.enqueue("#3");
+        Iterator<String> iterator = queue.iterator();
+        while (iterator.hasNext()) {
+            iterator.next();
+            iterator.remove();
+        }
+
+        assertTrue(queue.isEmpty());
+    }
+
+    @Test
+    void iterator() {
+        assertNotNull(queue.iterator());
     }
 }
