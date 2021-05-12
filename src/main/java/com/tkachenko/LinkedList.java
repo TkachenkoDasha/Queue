@@ -1,12 +1,14 @@
 package com.tkachenko;
 
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class LinkedList implements Queue {
+public class LinkedList<E> implements Queue<E> {
     private int size = 0;
-    private final Node head = new Node(null);
-    private Node tail;
+    private final Node<E> head = new Node<>(null);
+    private Node<E> tail;
+    private int modCount = 0;
 
     public LinkedList() {
         tail = head;
@@ -24,19 +26,20 @@ public class LinkedList implements Queue {
     }
 
     @Override
-    public void enqueue(String element) {
-        Node node = new Node(element, head);
+    public void enqueue(E element) {
+        Node<E> node = new Node<>(element, head);
         tail.next = node;
         tail = node;
         size++;
+        modCount++;
     }
 
     @Override
-    public String dequeue() {
-        String result = peek();
+    public E dequeue() {
+        E result = peek();
 
         if (head == tail) {
-            throw new NoSuchElementException("peek from an empty list");
+            throw new NoSuchElementException("Dequeue from an empty queue");
         }
 
         if (head.next == tail) {
@@ -45,21 +48,23 @@ public class LinkedList implements Queue {
 
         head.next = head.next.next;
         size--;
+        modCount++;
+
         return result;
     }
 
     @Override
-    public String peek() {
+    public E peek() {
         if (isEmpty()) {
-            throw new NoSuchElementException("Peek from an empty list");
+            throw new NoSuchElementException("Peek from an empty queue");
         }
         return head.next.value;
     }
 
     @Override
     public void clear() {
-        for (Node e = head; e != null; ) {
-            Node next = e.next;
+        for (Node<E> e = head; e != null; ) {
+            Node<E> next = e.next;
             e.value = null;
             e.next = null;
             e = next;
@@ -67,26 +72,36 @@ public class LinkedList implements Queue {
         head.next = head;
         tail = head;
         size = 0;
+        modCount++;
     }
 
     @Override
-    public Iterator<String> iterator() {
-         return new IteratorImpl();
+    public Iterator<E> iterator() {
+        return new IteratorImpl();
     }
 
-    private class IteratorImpl implements Iterator<String> {
-        Node cursor = head;
-        Node prevCursor = null;
+    private class IteratorImpl implements Iterator<E> {
+        Node<E> cursor = head;
+        Node<E> prevCursor = null;
+        private int expectedModCount;
+
+        public IteratorImpl() {
+            expectedModCount = modCount;
+        }
 
         @Override
         public boolean hasNext() {
+            checkForComodification();
+
             return cursor.next != null && cursor.next != head;
         }
 
         @Override
-        public String next() {
+        public E next() {
+            checkForComodification();
+
             if (hasNext()) {
-                String nextValue = cursor.next.value;
+                E nextValue = cursor.next.value;
                 prevCursor = cursor;
                 cursor = cursor.next;
                 return nextValue;
@@ -96,6 +111,8 @@ public class LinkedList implements Queue {
 
         @Override
         public void remove() {
+            checkForComodification();
+
             if (cursor == head) {
                 throw new IllegalStateException("Method next() hasn't been called");
             }
@@ -104,20 +121,30 @@ public class LinkedList implements Queue {
             }
 
             prevCursor.next = cursor.next;
+            cursor.value = null;
+            cursor.next = null;
             cursor = prevCursor;
             size--;
+
+            expectedModCount++;
+            modCount++;
+        }
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
         }
     }
 
-    private static class Node {
-        Node next;
-        String value;
+    private static class Node<E1> {
+        Node<E1> next;
+        E1 value;
 
-        Node(String value) {
+        Node(E1 value) {
             this.value = value;
         }
 
-        Node(String value, Node next) {
+        Node(E1 value, Node<E1> next) {
             this(value);
             this.next = next;
         }
